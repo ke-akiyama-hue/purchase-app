@@ -124,10 +124,12 @@ function putCachedJson_(key, value, expirationInSeconds) {
 function clearMasterCaches_() {
   try {
     if (MASTER_SS_ID) CacheService.getScriptCache().remove('employees_' + MASTER_SS_ID);
+    CacheService.getScriptCache().remove('purchase_form_extras');
     if (WORKFLOW_SS_ID) {
       CacheService.getScriptCache().remove('wf_routes_' + WORKFLOW_SS_ID);
       CacheService.getScriptCache().remove('wf_steps_' + WORKFLOW_SS_ID);
       CacheService.getScriptCache().remove('wf_bindings_' + WORKFLOW_SS_ID);
+      CacheService.getScriptCache().remove('wf_available_' + APP_CODE);
     }
   } catch (e) { /* ignore */ }
 }

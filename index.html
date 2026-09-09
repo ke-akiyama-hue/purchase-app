@@ -184,21 +184,42 @@
   var currentExchangeRateDate = '';
   var currencyOptions = [];
 
+  var DEFAULT_CURRENCIES = [
+    { code: 'JPY', label: '日本円', symbol: '¥' },
+    { code: 'USD', label: '米ドル', symbol: '$' },
+    { code: 'EUR', label: 'ユーロ', symbol: '€' },
+    { code: 'GBP', label: '英ポンド', symbol: '£' },
+    { code: 'CNY', label: '中国元', symbol: 'CN¥' }
+  ];
+
   document.addEventListener('DOMContentLoaded', function() {
+    bindTabs();
+    setupCurrencies(DEFAULT_CURRENCIES);
+    resetForm();
+    if (!BOOT_REQUEST_ID) document.getElementById('loading').style.display = 'none';
     google.script.run.withSuccessHandler(onBootstrap).withFailureHandler(onError).getBootstrapAppData();
+    google.script.run.withSuccessHandler(onFormExtras).withFailureHandler(function() {}).getPurchaseFormExtrasApi();
   });
 
   function onBootstrap(data) {
-    appData = data;
-    document.getElementById('loading').style.display = 'none';
+    appData = appData || {};
+    appData.userEmail = data.userEmail;
+    appData.employee = data.employee;
+    appData.workflowLinked = data.workflowLinked;
+    appData.statusLabels = data.statusLabels;
     document.getElementById('userInfo').textContent = (data.employee ? data.employee.name + ' / ' : '') + (data.userEmail || '');
-    bindTabs();
-    setupWorkflowRoutes(data.workflowRoutes, data.workflowLinked);
-    setupCurrencies(data.currencies || []);
-    setupPurchaseMasterCandidates(data.purchaseMasters);
-    resetForm();
     loadSubmitReadiness();
     if (BOOT_REQUEST_ID) openPurchase(BOOT_REQUEST_ID, 'mine');
+    else document.getElementById('loading').style.display = 'none';
+  }
+
+  function onFormExtras(data) {
+    data = data || {};
+    if (!appData) appData = {};
+    appData.workflowRoutes = data.workflowRoutes;
+    appData.purchaseMasters = data.purchaseMasters;
+    setupWorkflowRoutes(data.workflowRoutes, !!(appData && appData.workflowLinked) || !!(data.workflowRoutes && data.workflowRoutes.length));
+    setupPurchaseMasterCandidates(data.purchaseMasters);
   }
 
   function bindTabs() {
@@ -743,7 +764,13 @@
 
   function row(label, val) { return '<tr><th>' + esc(label) + '</th><td>' + esc(val) + '</td></tr>'; }
   function closeModal() { document.getElementById('detailModal').classList.remove('show'); currentPurchase = null; }
-  function goToPortal() { if (PORTAL_URL && PORTAL_URL.indexOf('http') === 0) window.top.location.href = PORTAL_URL; }
+  function goToPortal() {
+    if (PORTAL_URL && PORTAL_URL.indexOf('http') === 0) {
+      var url = PORTAL_URL;
+      url += (url.indexOf('?') === -1 ? '?' : '&') + 'forceReload=1';
+      window.top.location.href = url;
+    }
+  }
   function updatePendingBadge(n) { var el = document.getElementById('pendingCount'); if (!el) return; el.style.display = n > 0 ? '' : 'none'; el.textContent = n; }
   function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
   function toast(msg, err, ok) { var el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast' + (err ? ' error' : ok ? ' success' : ''); el.style.display = 'block'; setTimeout(function() { el.style.display = 'none'; }, 4000); }

@@ -84,6 +84,7 @@ function clearPurchaseNameMasterCaches_() {
   try {
     CacheService.getScriptCache().remove('purchase_name_master_' + SHEET_SUPPLIER_MASTER);
     CacheService.getScriptCache().remove('purchase_name_master_' + SHEET_MAKER_MASTER);
+    CacheService.getScriptCache().remove('purchase_form_extras');
   } catch (e) { /* ignore */ }
 }
 

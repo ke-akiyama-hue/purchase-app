@@ -104,7 +104,11 @@ function loadWorkflowBindings_() {
 }
 
 function getAvailableWorkflowRoutes() {
-  if (!isWorkflowLinked_() || getWorkflowAccessError_()) return [];
+  if (!isWorkflowLinked_()) return [];
+  var cacheKey = 'wf_available_' + APP_CODE;
+  var cached = getCachedJson_(cacheKey);
+  if (cached) return cached;
+  if (getWorkflowAccessError_()) return [];
   var bindings = loadWorkflowBindings_().filter(function(b) {
     return b.appCode === APP_CODE && b.active;
   });
@@ -128,6 +132,7 @@ function getAvailableWorkflowRoutes() {
     if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
     return a.routeName.localeCompare(b.routeName);
   });
+  putCachedJson_(cacheKey, list);
   return list;
 }
 

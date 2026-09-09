@@ -27,17 +27,31 @@ function filterPurchaseLists_(userEmail) {
 
 function getBootstrapAppData() {
   var userEmail = getCurrentUserEmail_();
+  var cacheKey = 'purchase_boot_' + String(userEmail || '').replace(/[^a-z0-9@._-]/g, '_');
+  var cached = getCachedJson_(cacheKey);
+  if (cached) return cached;
+
   var employee = findEmployeeByEmail(userEmail);
-  return {
+  var data = {
     userEmail: userEmail,
     employee: employee,
-    isMasterAdmin: isPurchaseMasterAdmin_(userEmail),
-    workflowRoutes: getAvailableWorkflowRoutes(),
     workflowLinked: isWorkflowLinked_(),
     statusLabels: PURCHASE_STATUS,
-    purchaseMasters: getPurchaseMasterCandidates(),
     currencies: getPurchaseCurrencyOptions_()
   };
+  putCachedJson_(cacheKey, data, 120);
+  return data;
+}
+
+function getPurchaseFormExtrasApi() {
+  var cached = getCachedJson_('purchase_form_extras');
+  if (cached) return cached;
+  var data = {
+    workflowRoutes: getAvailableWorkflowRoutes(),
+    purchaseMasters: getPurchaseMasterCandidates()
+  };
+  putCachedJson_('purchase_form_extras', data, MASTER_CACHE_TTL_SEC);
+  return data;
 }
 
 function getPurchaseListAppData() {
